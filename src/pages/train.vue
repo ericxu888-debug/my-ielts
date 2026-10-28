@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
-import { focusOptions, prompts, skillLabels } from '../training/content'
+import { focusOptions, practiceGuideFor, prompts, skillLabels } from '../training/content'
 import type { Skill } from '../training/content'
 import { createAttempt, normaliseAnswer, scheduleReview, wordCount } from '../training/model'
 import type { Attempt } from '../training/model'
@@ -11,6 +11,7 @@ const route = useRoute()
 const router = useRouter()
 const current = ref<Attempt>()
 const prompt = computed(() => prompts.find(p => p.id === current.value?.promptId) || prompts[0])
+const guide = computed(() => practiceGuideFor(prompt.value))
 const selectedSkill = computed(() => prompt.value.skill)
 const available = computed(() => prompts.filter(p => p.skill === selectedSkill.value))
 const submitted = computed(() => current.value?.status !== 'draft')
@@ -309,7 +310,7 @@ async function runAI(kind: 'feedback' | 'transcribe') {
     else {
       if (current.value.text.trim().length < 20)
         throw new Error('请先输入或转写至少 20 个字符的回答。')
-      const feedback = await (await api('/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skill: selectedSkill.value, prompt: `${prompt.value.instruction}\n${JSON.stringify(prompt.value.cues || prompt.value.table || [])}`, text: current.value.text }) })).json()
+      const feedback = await (await api('/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skill: selectedSkill.value, prompt: `${prompt.value.instruction}\n${JSON.stringify({ cues: prompt.value.cues, table: prompt.value.table, process: prompt.value.process })}`, text: current.value.text }) })).json()
       if (current.value?.id === id) {
         current.value.feedback = feedback
         persist()
@@ -382,6 +383,9 @@ onBeforeUnmount(() => {
         <div class="instruction">
           {{ prompt.instruction }}
         </div>
+        <p class="studio-note">
+          本题专注：{{ guide.focus }}
+        </p>
         <ul v-if="prompt.cues" class="cue-list">
           <li v-for="cue in prompt.cues" :key="cue">
             {{ cue }}
@@ -389,7 +393,7 @@ onBeforeUnmount(() => {
         </ul>
         <table v-if="prompt.table" class="data-table">
           <caption class="muted">
-            Public library use by age group
+            {{ prompt.tableCaption || 'Public library use by age group' }}
           </caption><tbody>
             <tr v-for="(row, i) in prompt.table" :key="i">
               <td v-for="(cell, j) in row" :key="j">
@@ -398,13 +402,20 @@ onBeforeUnmount(() => {
             </tr>
           </tbody>
         </table>
+        <figure v-if="prompt.process" class="process-diagram">
+          <figcaption>{{ prompt.process.title }}</figcaption><ol>
+            <li v-for="(stage, i) in prompt.process.stages" :key="stage">
+              <b>{{ i + 1 }}</b><span>{{ stage }}</span>
+            </li>
+          </ol>
+        </figure>
         <div v-if="prompt.passage" class="reading-passage" style="margin-top:24px">
           <p v-for="paragraph in prompt.passage" :key="paragraph">
             {{ paragraph }}
           </p>
         </div>
         <div class="studio-note">
-          {{ selectedSkill === 'reading' ? '这是一篇原创短篇训练，不能换算雅思阅读分数，也不替代完整模考。' : selectedSkill === 'speaking' ? 'Part 2 包含 1 分钟准备与最多 2 分钟回答。录音只在点击后开始，最长 10 分钟。' : '先明确立场和段落作用，再写正文。Task 1 注意概述，Task 2 注意论证。' }}
+          {{ selectedSkill === 'reading' ? '这是一篇原创短篇训练，不能换算雅思阅读分数，也不替代完整模考。' : selectedSkill === 'speaking' ? `${prompt.section === 'Part 2' ? 'Part 2 包含 1 分钟准备与最多 2 分钟回答。' : '计时为本组短练习建议用时，不是完整口语考试时长。'}录音只在点击后开始，最长 10 分钟。` : '先明确立场和段落作用，再写正文。Task 1 注意概述，Task 2 注意论证。' }}
         </div>
         <div v-if="parent" class="studio-note">
           本次是同题重练。上次改进点：<strong>{{ parent.focus || '尚未记录' }}</strong>。先不看旧答案，试着完成新的作答。
@@ -474,7 +485,7 @@ onBeforeUnmount(() => {
             <b>01</b><p>回放录音 / 检查作答，找出具体证据。不要只写“词汇不好”。</p>
           </div>
           <div v-if="selectedSkill !== 'reading'" class="studio-note">
-            {{ aiReady ? 'AI 分析会把作答文本发送给服务商并产生费用；点击后才调用。' : 'AI 尚未开通，可以先自主复盘。到“同步与设置”查看服务状态。' }} 口语文本反馈不评价发音或真实流利度，也不提供正式分数。
+            {{ !connected ? '请先到“同步与设置”登录，再检查 AI 状态。网站更新后可能需要重新登录。' : aiReady ? 'AI 分析会把作答文本发送给服务商并产生费用；点击后才调用。' : 'AI 尚未配置，可以先自主复盘。到“同步与设置”查看服务状态。' }} 口语文本反馈不评价发音或真实流利度，也不提供正式分数。
           </div>
           <button v-if="selectedSkill !== 'reading'" class="btn btn-secondary" :disabled="!aiReady || !!busy" @click="runAI('feedback')">
             {{ busy === 'feedback' ? '正在分析…' : current.feedback ? '重新分析 · 再次调用' : 'AI 分析作答 · 按次调用' }}
@@ -497,6 +508,19 @@ onBeforeUnmount(() => {
               {{ current.feedback.limitation }}
             </p>
           </div>
+          <details class="topic-review">
+            <summary>本题专项复盘：{{ guide.focus }}</summary><ul class="feedback-list">
+              <li v-for="question in guide.review" :key="question">
+                {{ question }}
+              </li>
+            </ul><div class="studio-note">
+              小练习：{{ guide.drill }}
+            </div><ul class="bite-check">
+              <li v-for="check in guide.check" :key="check">
+                □ {{ check }}
+              </li>
+            </ul>
+          </details>
           <label for="focus" class="field-label">02 · 这次只聚焦一个改进点</label><select id="focus" v-model="current.focus" class="studio-input" @change="persist">
             <option value="">
               请选择一个目标
@@ -504,7 +528,7 @@ onBeforeUnmount(() => {
               {{ option }}
             </option>
           </select>
-          <label for="reflection" class="field-label">证据、原因与下一次的具体行动</label><textarea id="reflection" v-model="current.reflection" class="studio-input" rows="4" placeholder="例如：第 3 题把“没有提及”误判成 FALSE。下次先找明确反证，没有证据就不推断。" @input="persist" />
+          <label for="reflection" class="field-label">证据、原因与下一次的具体行动</label><textarea id="reflection" v-model="current.reflection" class="studio-input" rows="4" :placeholder="selectedSkill === 'reading' ? '例如：把没有提及误判成 FALSE。下次先找明确反证，没有证据就不推断。' : selectedSkill === 'writing' ? '例如：例子后面没有解释它如何支持观点。下次补上原因和结果的联系。' : '例如：只说了 important，没有具体细节。下次补充一个真实场景和影响。'" @input="persist" />
           <h3>03 · 不看答案，能再做对吗？</h3><p class="muted">
             按实际掌握情况安排复习。间隔是可调整的启发式策略，不保证提分。
           </p><div class="toolbar">
@@ -520,6 +544,11 @@ onBeforeUnmount(() => {
           </p><button class="btn btn-secondary" @click="retry">
             带着改进点，同题重练 ↗
           </button>
+          <p v-if="guide.transferId" class="status-line">
+            <RouterLink :to="`/train?prompt=${guide.transferId}`">
+              同题练好后，换一道题检验是否会用 →
+            </RouterLink>
+          </p>
           <details v-if="parent" class="comparison">
             <summary>查看上一次作答与复盘（建议新作答完成后再打开）</summary><p>{{ parent.reflection }}</p><pre>{{ parent.text || '上次为阅读或录音练习，可在复盘记录中打开原记录。' }}</pre>
           </details>

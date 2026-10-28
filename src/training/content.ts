@@ -1,3 +1,5 @@
+import { additionalPrompts } from './more-content'
+
 export type Skill = 'speaking' | 'writing' | 'reading'
 export interface ReadingQuestion {
   id: string
@@ -18,7 +20,11 @@ export interface Prompt {
   passage?: string[]
   questions?: ReadingQuestion[]
   table?: string[][]
+  tableCaption?: string
+  process?: { title: string; stages: string[] }
+  guide?: PracticeGuide
 }
+export interface PracticeGuide { focus: string; review: string[]; drill: string; check: string[]; transferId?: string }
 // Original practice material, not official IELTS questions or a calibrated test.
 export const prompts: Prompt[] = [
   { id: 's-place', skill: 'speaking', title: 'A place where you concentrate', section: 'Part 2', minutes: 3, instruction: 'Describe a place where you like to go to concentrate. Prepare for one minute, then speak for up to two minutes.', cues: ['Where the place is', 'What you do there', 'Why it helps you concentrate', 'Explain how you feel after spending time there'] },
@@ -50,10 +56,32 @@ export const prompts: Prompt[] = [
       { id: '6', text: 'Spreading practice across days can improve long-term ______.', answer: 'retention', evidence: 'C: Spacing practice across several days often supports longer retention', explanation: 'spreading practice 对应 spacing practice；long-term 对应 longer。填原文 retention。' },
     ],
   },
+  ...additionalPrompts,
 ]
 export const skillLabels: Record<Skill, string> = { speaking: '口语', writing: '写作', reading: '阅读' }
 export const focusOptions: Record<Skill, string[]> = {
   speaking: ['直接回答并展开', '用具体例子支持观点', '减少停顿与自我重复', '词汇准确性', '语法准确性', '发音与重音'],
   writing: ['回应题目全部要求', '观点与论证', '段落衔接', '词汇准确性', '语法准确性', '概述与数据比较'],
   reading: ['原文定位', '同义替换', 'FALSE 与 NOT GIVEN', '题干范围与限定词', '字数与拼写'],
+}
+
+export function practiceGuideFor(prompt: Prompt): PracticeGuide {
+  if (prompt.guide)
+    return prompt.guide
+  if (prompt.skill === 'reading')
+    return { focus: '用原文证据区分反对信息与未提及信息', review: ['每题在原文找到哪一句？用自己的话说明它如何支持答案。', '选 FALSE 时，原文是否有明确反证？是否把自己的常识当成了原文信息？', '填空是否使用原文单词，并遵守题目字数限制？'], drill: '选一道错题，遮住解析，重新圈出题干限定词，再写“原文证据 → 判断”的一句解释。', check: ['能定位证据，而不是只记得选项', '能说清干扰判断错在哪里'], transferId: 'r-shade' }
+
+  if (prompt.skill === 'writing' && prompt.section === 'Task 1')
+    return { focus: '先概述主要特征，再用数据或流程细节支持', review: ['概述有没有抓住最明显的变化、差异或主要阶段？', '有没有按趋势或类别分组，而不是逐格罗列？', '单位、时态和比较对象是否准确？有没有加入图中没有的原因？'], drill: '先不看旧稿，用两句写出概述，再选两组最有代表性的信息支持它。', check: ['概述不依赖逐项报数', '具体描述能在题目中核实'], transferId: 'w-energy' }
+
+  if (prompt.skill === 'writing')
+    return { focus: '让观点、原因和例子形成完整论证', review: ['题目要求的部分是否都回应了？自己的立场是否明确且前后一致？', '每段的例子如何证明中心句？有没有跳过关键因果步骤？', '选一句不自然的表达，先定位问题，再自己改写并解释修改理由。'], drill: '选一段薄弱主体段，按“中心句 → 为什么 → 具体情境 → 回扣观点”重写；不要先看范文。', check: ['能解释例子与观点之间的关系', '新段落解决了原来的具体问题'], transferId: prompt.id === 'w-transport' ? 'w-health' : 'w-transport' }
+
+  if (prompt.section === 'Part 1')
+    return { focus: '直接作答，再自然补充理由或细节', review: ['开头是否直接回答了问题？', '例子是否具体，还是只重复 important、interesting、good？', '回放时标记一处影响理解的停顿或语法问题，文本反馈不能代替听音。'], drill: '选一个问题重新回答 20–30 秒，加入一个真实细节。第三次换一种表达，不背第二遍的句子。', check: ['回答切题且有支持信息', '重答时能自主表达，而不是背稿'], transferId: prompt.id === 's-hometown' ? 's-routine' : 's-hometown' }
+
+  if (prompt.section === 'Part 3')
+    return { focus: '从个人经历转向解释、比较与适度概括', review: ['有没有解释为什么，而不是只有立场？', '有没有考虑适用条件、不同人群或反例，避免 always、everyone 之类的绝对判断？', '例子是否支持一般观点，而不是把个人经历当作唯一证据？'], drill: '用“观点 → 原因 → 例子 → 适用条件”回答一道问题，再用不同例子重答。', check: ['观点和理由能连起来', '能够回应追问或不同看法'], transferId: prompt.id === 's-technology' ? 's-environment' : 's-technology' }
+
+  return { focus: '把一个具体经历讲清楚，补足细节与感受', review: ['是否交代了人物、时间、情境和具体经过？', '有没有解释经历为什么对自己有意义？', '回放时记录一处重复表达或明显停顿，并判断是否影响听懂。'], drill: '保留 5 个关键词，遮住转写再讲一次；随后换一个经历使用相同组织方法。', check: ['能围绕题目持续展开', '第二遍有新的细节，而不是只重复第一遍'], transferId: 's-decision' }
 }

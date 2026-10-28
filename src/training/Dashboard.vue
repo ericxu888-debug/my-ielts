@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { attempts } from './storage'
 import { dueAttempts } from './model'
 import { prompts, skillLabels } from './content'
+import SpeakingBite from './SpeakingBite.vue'
 
 const due = computed(() => dueAttempts(attempts.value))
 const drafts = computed(() => attempts.value.filter(a => a.status === 'draft'))
@@ -25,22 +26,12 @@ function title(id: string) {
     <section class="studio-hero">
       <div>
         <div class="hero-kicker">
-          <span class="tiny-dot" /> 从 6.5 出发，向 7.0 前进
+          <span class="tiny-dot" /> Academic UKVI · 从 6.5 出发，向 7.0 前进
         </div><h1>练习有方向，<br>进步有<span>证据。</span></h1><p>把一次练习变成真正的掌握。先独立作答，再找到问题，<br class="desktop-only">带着一个明确目标，练第二遍。</p><RouterLink class="btn btn-primary" :to="due.length ? '/review' : '/train?skill=speaking'">
           {{ due.length ? '先完成待复盘练习' : '开始今天的口语练习' }} <span>↗</span>
         </RouterLink>
       </div>
-      <div class="goal-card">
-        <div class="goal-card-top">
-          MY NEXT MILESTONE <span>↗</span>
-        </div><div class="goal-number">
-          7<span>.0</span>
-        </div><p>Academic UKVI · 目标总分</p><div class="goal-divider" /><div class="goal-detail">
-          <span>近期目标</span><b>11 月 · 首次检验</b>
-        </div><div class="goal-detail">
-          <span>长期目标</span><b>更准确，也更自然地表达</b>
-        </div><small>当前总分 6.5 / 口语 6.0 · 自述基线<br>其余单项待诊断，不推算未测成绩</small>
-      </div>
+      <SpeakingBite />
     </section>
     <section class="stats-strip" aria-label="真实学习记录">
       <div><strong>{{ recent.length }}<small> 次</small></strong><span>近 7 天提交练习</span></div><div><strong>{{ practiceMinutes }}<small> 分钟</small></strong><span>近 7 天有效计时</span></div><div><strong>{{ due.length }}<small> 项</small></strong><span>现在需要复盘</span></div><div><strong>{{ drafts.length }}<small> 份</small></strong><span>未完成草稿</span></div>

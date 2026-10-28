@@ -16,6 +16,8 @@ const resources = ref(false)
       <nav aria-label="主导航">
         <RouterLink to="/" exact-active-class="nav-current">
           今日计划
+        </RouterLink><RouterLink to="/speaking-notes" active-class="nav-current">
+          口语小课堂
         </RouterLink><RouterLink to="/train" active-class="nav-current">
           开始练习
         </RouterLink><RouterLink to="/review" active-class="nav-current">
