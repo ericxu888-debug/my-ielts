@@ -480,6 +480,9 @@ onBeforeUnmount(() => {
             {{ busy === 'feedback' ? '正在分析…' : current.feedback ? '重新分析 · 再次调用' : 'AI 分析作答 · 按次调用' }}
           </button>
           <div v-if="current.feedback">
+            <p v-for="warning in current.feedback.warnings" :key="warning" class="studio-alert" role="status">
+              {{ warning }}
+            </p>
             <h3>反馈摘要</h3><p>{{ current.feedback.summary }}</p><ul class="feedback-list">
               <li v-for="s in current.feedback.strengths" :key="s">
                 {{ s }}

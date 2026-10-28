@@ -1,6 +1,7 @@
 import type { Skill } from './content'
 
 export interface Feedback {
+  warnings?: string[]
   summary: string
   strengths: string[]
   priorities: {
@@ -58,6 +59,8 @@ export function isAttempt(value: unknown): value is Attempt {
   if (!value || typeof value !== 'object')
     return false
   const a = value as Attempt
+  if (a.feedback?.warnings !== undefined && (!Array.isArray(a.feedback.warnings) || !a.feedback.warnings.every(w => typeof w === 'string')))
+    return false
   if (a.feedback && (typeof a.feedback.summary !== 'string' || !Array.isArray(a.feedback.strengths) || !a.feedback.strengths.every(s => typeof s === 'string') || !Array.isArray(a.feedback.priorities) || !a.feedback.priorities.every(p => p && typeof p.issue === 'string' && typeof p.evidence === 'string' && typeof p.action === 'string') || typeof a.feedback.exercise !== 'string' || typeof a.feedback.limitation !== 'string'))
     return false
   return typeof a.id === 'string' && /^[\w-]{1,100}$/.test(a.id) && typeof a.promptId === 'string' && ['speaking', 'writing', 'reading'].includes(a.skill) && ['draft', 'review', 'complete'].includes(a.status)

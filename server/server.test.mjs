@@ -87,12 +87,14 @@ test('saved practice survives a server restart; old sessions expire', async () =
 test('AI feedback requires quotations grounded in the answer (provider mocked; no paid request)', async () => {
   const originalFetch = globalThis.fetch
   let quote = 'I prefer studying in a library'
+  let evidenceId
   const input = { skill: 'speaking', prompt: 'Describe a place to study.', text: 'I prefer studying in a library because it is quiet.' }
   globalThis.fetch = (url, options) => {
     if (url === 'https://api.openai.com/v1/chat/completions') {
       const sent = JSON.parse(options.body)
       assert.match(sent.messages[0].content, /do not assess pronunciation/)
-      const feedback = { summary: '需要展开具体例子', strengths: ['观点明确'], priorities: [{ issue: '展开不足', evidence: quote, action: '补充一次具体经历' }], exercise: '重答并补充例子', limitation: '仅根据文本，不评价发音或流利度' }
+      assert.deepEqual(JSON.parse(sent.messages[1].content).answerSources, [{ id: 'S1', text: input.text }])
+      const feedback = { summary: '需要展开具体例子', strengths: ['观点明确'], priorities: [{ issue: '展开不足', ...(evidenceId ? { evidenceId } : { evidence: quote }), action: '补充一次具体经历' }], exercise: '重答并补充例子', limitation: '仅根据文本，不评价发音或流利度' }
       return Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(feedback) } }] }), { status: 200 }))
     }
     return originalFetch(url, options)
@@ -106,10 +108,22 @@ test('AI feedback requires quotations grounded in the answer (provider mocked; n
     const authHeaders = { ...headers, Cookie: login.headers.get('set-cookie').split(';')[0] }
     const valid = await originalFetch(`${aiBase}/feedback`, { method: 'POST', headers: authHeaders, body: JSON.stringify(input) })
     assert.equal(valid.status, 200)
+    assert.equal((await valid.json()).priorities[0].evidence, input.text)
+    evidenceId = 'S1'
+    const cited = await originalFetch(`${aiBase}/feedback`, { method: 'POST', headers: authHeaders, body: JSON.stringify(input) })
+    assert.equal(cited.status, 200)
+    assert.equal((await cited.json()).priorities[0].evidence, input.text)
+    evidenceId = undefined
     quote = 'A sentence the learner never said.'
     const invented = await originalFetch(`${aiBase}/feedback`, { method: 'POST', headers: authHeaders, body: JSON.stringify(input) })
     assert.equal(invented.status, 502)
     assert.match((await invented.json()).error, /引用未能/)
+    input.skill = 'writing'
+    input.text = 'I think the first is important'
+    evidenceId = 'S1'
+    const shortAnswer = await originalFetch(`${aiBase}/feedback`, { method: 'POST', headers: authHeaders, body: JSON.stringify(input) })
+    assert.equal(shortAnswer.status, 200)
+    assert.equal((await shortAnswer.json()).priorities[0].evidence, input.text)
   }
   finally {
     globalThis.fetch = originalFetch

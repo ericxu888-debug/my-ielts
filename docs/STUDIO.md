@@ -35,7 +35,7 @@ cd /workspace/my-ielts
 
 开发：启动 `node server/index.mjs`；另开终端运行 `pnpm exec vite --host 0.0.0.0 --port 3333 --strictPort`，Vite 将 /api 代理到 8787。保持继承的代理和 CA 设置；受管云环境联网遵守其权限流程。
 
-验证：`pnpm run build`、`pnpm exec vitest run --threads false`、`node --test server/server.test.mjs`。已有 `src/pages/ielts/practice.vue` 的三个类型错误是原仓库缺陷；不要将其归因于训练模块。
+验证：`pnpm run build`、`pnpm exec vitest run --threads false`、`pnpm run test:server`。已有 `src/pages/ielts/practice.vue` 的三个类型错误是原仓库缺陷；不要将其归因于训练模块。
 
 ## 正式使用与费用
 
@@ -64,3 +64,9 @@ AI 请求仅由用户操作触发；发给服务商的内容为所选录音或�
 - `node test/studio-smoke.cjs`：使用系统 Chromium 与环境自带 Playwright，两个独立浏览器会话模拟电脑和手机；验证草稿刷新恢复、同题重练、3→6 天复习间隔、双向同步、同时离线编辑保留双方版本、阅读 6/6 判分与证据展示、真实 MediaRecorder 录音到 IndexedDB、跨会话同步和实际回放；无页面 JavaScript 错误、手机宽度无横向溢出。
 - 新增/修改的训练前端通过定向 ESLint；完整 typecheck 仍只有原有 `src/pages/ielts/practice.vue` 的三个错误。
 - 尚未验证真实 iPhone/Safari、真实收费 AI 服务或 Render 部署；尚未发布，也未产生付款。首批素材为 4 道口语、3 道写作、1 篇六题短阅读，后续需要持续补充材料。
+
+### 上线后的引用校验修复
+
+用户在 Render 上完成部署并接入了 OpenAI API；实际调用返回后被旧版逐字引用校验拒绝。新实现为原始作答生成片段编号，让模型引用编号，由服务器恢复真实原句。兼容旧式引用中的外层引号、空白与排版差异；不接受改写或虚构句子。部分引用无效时只过滤对应建议，并显示提示，不丢弃其余有效建议。
+
+18 项服务端测试通过（9 项引用回归测试、9 项服务集成测试），包括截图短句 `I think the first is important` 的接口回归；AI 响应使用模拟，没有额外收费调用。修复的真实线上模型行为仍需新部署完成后验证。
