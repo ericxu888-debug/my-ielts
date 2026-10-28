@@ -1,0 +1,23 @@
+# Optional paid deployment blueprint. This file does not create resources.
+# Review Render's current service and persistent-disk prices before deploying.
+services:
+  - type: web
+    name: ielts-studio
+    runtime: node
+    plan: starter
+    buildCommand: npm install --prefix /tmp/ielts-build-tools --no-package-lock --ignore-scripts pnpm@8.6.0 && /tmp/ielts-build-tools/node_modules/.bin/pnpm install --frozen-lockfile && /tmp/ielts-build-tools/node_modules/.bin/pnpm run build
+    startCommand: node server/index.mjs
+    healthCheckPath: /api/session
+    disk:
+      name: ielts-studio-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: IELTS_DATA_DIR
+        value: /var/data
+      - key: IELTS_PASSWORD
+        generateValue: true

@@ -9,3 +9,6 @@ node_modules
 *.log
 # git rm --cached auto-imports.d.ts
 auto-imports.d.ts
+.studio-data/
+.env
+.env.*

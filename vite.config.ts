@@ -14,6 +14,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3333,
+    proxy: { '/api': 'http://127.0.0.1:8787' },
   },
   resolve: {
     alias: {
@@ -63,6 +64,7 @@ export default defineConfig({
 
   // https://github.com/vitest-dev/vitest
   test: {
+    include: ['test/**/*.test.ts'],
     environment: 'jsdom',
   },
 })

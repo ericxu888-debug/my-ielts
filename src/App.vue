@@ -1,15 +1,14 @@
-<template>
-  <TheHeader />
-  <!-- <div class="flex flex-1 overflow-hidden bg-gray-50 pt-16 dark:bg-gray-900">
-    <div
-      class="relative mx-auto h-full w-full max-w-screen-2xl overflow-y-auto bg-gray-50 dark:bg-gray-900 dark:text-white"
-    />
-  </div> -->
-  <div class="flex flex-1 overflow-hidden bg-gray-50 py-16 leading-8 dark:bg-gray-900">
-    <div class="relative mx-auto h-full w-full max-w-screen-2xl overflow-y-auto bg-gray-50 dark:bg-gray-900 dark:text-white">
-      <RouterView />
-    </div>
-  </div>
+<script setup lang="ts">
+import StudioHeader from './training/StudioHeader.vue'
+import './training/studio.css'
+</script>
 
-  <TheFooter />
+<template>
+  <StudioHeader />
+  <main class="studio-main">
+    <RouterView />
+  </main>
+  <footer class="studio-footer">
+    <span>IELTS STUDIO · 私人学习空间</span><span>练习 → 复盘 → 重练 → 间隔复习</span>
+  </footer>
 </template>

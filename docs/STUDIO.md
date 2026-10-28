@@ -1,0 +1,66 @@
+# IELTS Studio：个人训练与复盘
+
+目标：Academic UKVI，总分 6.5 → 7.0，已知口语 6.0。其余单项待诊断。11 月先参加一次考试，同时长期积累能力。所有题卡和阅读文章为原创训练材料，不是官方试题或完整模考。
+
+## 学习流程
+
+1. 不看范文，先计时作答；口语先录音，不提前写完整稿。
+2. 提交后保留原始作答。阅读使用确定答案判分并展示证据；口语、写作可自主复盘，或明确点击调用 AI。
+3. 找到一处具体错误证据，选择一个改进点，写明下次行动。
+4. 创建有父记录关联的同题重练，对比两次作答。
+5. 自评后安排间隔：again=1 天，hard=max(2, ceil(旧间隔×1.3))，good=首次 3 天，以后翻倍，最长 60 天。这是透明的启发式规则，不是已验证的个体提分模型。
+
+方法参考：Dunlosky et al. (2013), *Improving Students’ Learning With Effective Learning Techniques*, Psychological Science in the Public Interest, DOI 10.1177/1529100612453266；Roediger & Karpicke (2006), *Test-Enhanced Learning*, DOI 10.1111/j.1467-9280.2006.01693.x。这些研究支持提取练习与分散练习的一般原则，不能证明本网站、具体间隔或短期 IELTS 提分效果。
+
+## 开发
+
+使用现有 checkout，不需另建 worktree。Node **24.19.0**（内置 SQLite）、pnpm **8.6.0**，无新增运行依赖。
+
+```sh
+cd /workspace/my-ielts
+/workspace/.my-ielts-tools/node_modules/.bin/pnpm install --frozen-lockfile
+```
+
+服务端通过环境变量读取配置，不在仓库写入口令或 API 密钥。`node --env-file=/path/outside/repository/studio.env server/index.mjs` 可读取自己创建的私有环境文件；不要提交此文件。需要：
+
+| 名称 | 作用 |
+| --- | --- |
+| IELTS_PASSWORD | 必需，至少 12 字符的强随机私人登录口令；不要在聊天中提供 |
+| IELTS_DATA_DIR | 数据库和音频目录，默认 `.studio-data`，部署时必须挂持久磁盘 |
+| HOST / PORT | 默认 127.0.0.1 / 8787；容器部署时 HOST=0.0.0.0 |
+| IELTS_COOKIE_SECURE | 默认 true；仅本机 HTTP 开发可设置 false；公网必须保持 true |
+| IELTS_AI_KEY | 可选，仅服务端使用的 OpenAI API 密钥 |
+| IELTS_AI_MODEL | 默认 gpt-4.1-mini，可按账户模型权限设置 |
+| IELTS_TRANSCRIPTION_MODEL | 默认 gpt-4o-mini-transcribe |
+
+开发：启动 `node server/index.mjs`；另开终端运行 `pnpm exec vite --host 0.0.0.0 --port 3333 --strictPort`，Vite 将 /api 代理到 8787。保持继承的代理和 CA 设置；受管云环境联网遵守其权限流程。
+
+验证：`pnpm run build`、`pnpm exec vitest run --threads false`、`node --test server/server.test.mjs`。已有 `src/pages/ielts/practice.vue` 的三个类型错误是原仓库缺陷；不要将其归因于训练模块。
+
+## 正式使用与费用
+
+这次开发不创建付费账户、不自动充值、不发布网站。跨设备使用需要部署到同一个 HTTPS 地址，不能只把前端放到 GitHub Pages：必须有可运行 Node 24 的服务和持久磁盘。
+
+推荐小型 Node 托管服务或 VPS，配置 HTTPS 反向代理和持久磁盘。先 `pnpm run build`，再运行 `node server/index.mjs`，该服务同时提供 dist 静态页面和 API。反向代理需支持至少 25 MB 请求与 120 秒 AI 超时。公网保留 Secure Cookie，禁止直接公开数据库目录，服务器和备份仅个人可读。
+
+仓库附带 `render.yaml` 作为 Render Blueprint：选择付费 starter 服务与 1 GB 持久磁盘、Node 24.19.0、自动生成私人访问口令。它只是配置文件，不会自行开通服务。先在 [Render 定价页](https://render.com/pricing) 核实服务和磁盘费用，再由账户持有人部署；从服务端环境设置查看生成的 IELTS_PASSWORD，用于两台设备登录。可选 AI 密钥另在服务端环境设置添加，不写进 Blueprint 或前端。此 Blueprint 尚未在 Render 上实测。
+
+服务费用由所选托管商和存储量决定；AI 费用由转写分钟数、输入输出文本和模型决定，充值/订阅 ChatGPT 不等于 API 额度。开通前确认实时价格和实际套餐。AI 尚未配置时，训练和自主复盘仍可使用，但自动转写/反馈不可用。不要承诺已验证的 AI 准确性：本地测试不产生付费 AI 请求。
+
+SQLite 和音频统一位于 IELTS_DATA_DIR。定期暂停服务后复制整个目录备份（不要仅复制运行中的 sqlite 主文件而遗漏 WAL），并测试恢复。登录会话使用 HttpOnly、SameSite=Strict Cookie，7 天到期，服务器重启后需重新登录。无注册或多用户系统。
+
+## 同步与隐私
+
+文字自动保存至浏览器 localStorage，音频存至 IndexedDB；本地存储不等于云备份。登录同一服务后每 30 秒、窗口重新聚焦、网络恢复以及提交时尝试同步。失败不清空本机记录。按记录 revision 乐观锁避免静默覆盖；冲突会保留一个新 ID 的本机副本，再次同步上传。音频以内容散列命名，不覆盖冲突版本。
+
+退出登录不会清空本机副本，因此只适合个人设备。JSON 导出不含音频，音频可逐条下载；导入只合并新 ID，不覆盖已有记录，也不会假装恢复了音频。
+
+AI 请求仅由用户操作触发；发给服务商的内容为所选录音或文本及题目。服务端限制并发、输入大小和超时，密钥不发给浏览器。文字反馈不评价发音、真实流利度或给官方分数。尚未实现声学发音评估、整套模考和大题库。
+
+## 本次验证（2026-10-28）
+
+- 生产构建通过；保留原仓库大 chunk 警告与可选外部字体访问限制。
+- Vitest：3 个文件、10 个测试通过；Node 服务端：9 个集成测试通过（包括重启后持久化、鉴权、冲突与录音；AI 响应使用本地模拟，无收费调用）。
+- `node test/studio-smoke.cjs`：使用系统 Chromium 与环境自带 Playwright，两个独立浏览器会话模拟电脑和手机；验证草稿刷新恢复、同题重练、3→6 天复习间隔、双向同步、同时离线编辑保留双方版本、阅读 6/6 判分与证据展示、真实 MediaRecorder 录音到 IndexedDB、跨会话同步和实际回放；无页面 JavaScript 错误、手机宽度无横向溢出。
+- 新增/修改的训练前端通过定向 ESLint；完整 typecheck 仍只有原有 `src/pages/ielts/practice.vue` 的三个错误。
+- 尚未验证真实 iPhone/Safari、真实收费 AI 服务或 Render 部署；尚未发布，也未产生付款。首批素材为 4 道口语、3 道写作、1 篇六题短阅读，后续需要持续补充材料。
