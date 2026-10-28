@@ -1,0 +1,242 @@
+[
+  {
+    "id": "answer-reason-example",
+    "category": "展开回答",
+    "title": "回答后，加一个“为什么”和小细节",
+    "point": "Part 1 可以先直接回答，再用理由或真实细节展开。不是每题都要套固定三句。",
+    "before": "Yes, I like my hometown.",
+    "after": "Yes, especially the riverside area. I often go for a walk there after work because it helps me relax.",
+    "explanation": "第一句没有语法错误；后者增加了具体地点、习惯和原因，让听者更了解你。",
+    "drill": "你喜欢自己住的地方吗？不照读例句，用一个真实地点或习惯回答 30 秒。",
+    "check": [
+      "开头直接回答了问题",
+      "补充了一个真实而具体的细节"
+    ],
+    "promptId": "s-hometown"
+  },
+  {
+    "id": "important-why",
+    "category": "展开回答",
+    "title": "别停在 important：解释它改变了什么",
+    "point": "说“很重要”之后，补上影响、原因或一个结果，论述才真正展开。",
+    "before": "Learning English is very important.",
+    "after": "Learning English gives me access to courses that are not available in Chinese, so I have more options when I want to learn a new skill.",
+    "explanation": "用具体用途说明重要性，比反复使用 very、really、extremely 更有信息量。",
+    "drill": "说一项你觉得重要的技能，解释它给你带来的一个具体变化。",
+    "check": [
+      "说清“对谁、有什么影响”",
+      "没有只用形容词重复同一观点"
+    ],
+    "promptId": "s-learning"
+  },
+  {
+    "id": "tell-one-moment",
+    "category": "展开回答",
+    "title": "讲经历时，抓住一个具体瞬间",
+    "point": "Part 2 不必堆很多事件。讲清一个小场景里的问题、行动和感受，就能有效展开。",
+    "before": "My friend helped me a lot. She is very kind.",
+    "after": "When I was preparing for an interview, my friend spent an evening practising questions with me. Her feedback helped me notice how quickly I was speaking.",
+    "explanation": "后者给出了情境、行动和作用；不是要求你编造故事，而是从真实经历中挑选细节。",
+    "drill": "回忆一次别人帮你的经历，只讲其中最有帮助的一件事。",
+    "check": [
+      "交代了当时的情境",
+      "具体说明对方做了什么，以及为什么有用"
+    ],
+    "promptId": "s-help"
+  },
+  {
+    "id": "compare-past-present",
+    "category": "展开回答",
+    "title": "谈变化，用“过去—现在—原因”",
+    "point": "遇到 Has … changed? 可以选择一个变化展开，不需要罗列全部历史。",
+    "before": "My hometown has changed a lot.",
+    "after": "There used to be very few buses, but now there is a service every ten minutes. That has made it much easier for people to get to work.",
+    "explanation": "对比有具体对象，接着说明影响。数据若记不清，可以用 more frequent 等描述，不要为了细节编造数字。",
+    "drill": "说说你的阅读习惯或日常安排与过去有什么不同，并解释原因。",
+    "check": [
+      "过去和现在有清楚对比",
+      "变化背后有原因或影响"
+    ],
+    "promptId": "s-reading"
+  },
+  {
+    "id": "depends-with-content",
+    "category": "展开回答",
+    "title": "It depends 后面要有条件",
+    "point": "Part 3 中可以承认不同情况，但要说明取决于什么，再给出判断。",
+    "before": "It depends. Different people have different opinions.",
+    "after": "It depends on the task. For a quick explanation, an app can be useful, but for detailed feedback I would usually prefer a teacher.",
+    "explanation": "一般性的套话被替换成具体条件与比较；后者才在回答题目。",
+    "drill": "独自学习和与别人一起学习，哪种更好？用一个条件组织回答。",
+    "check": [
+      "明确指出决定因素",
+      "解释了不同条件下的选择"
+    ],
+    "promptId": "s-technology"
+  },
+  {
+    "id": "natural-openings",
+    "category": "自然表达",
+    "title": "日常问题，可以自然开头",
+    "point": "Part 1 是对话。简单的 Yes、Usually、Not really 都可以，不必每题先做宏大引言。",
+    "before": "As we all know, reading plays an indispensable role in modern society.",
+    "after": "I mostly read on my phone these days, especially when I am on the bus.",
+    "explanation": "前者在某些论述中可用，但拿来回答个人阅读习惯容易绕开问题。自然、切题比堆复杂开场更重要。",
+    "drill": "直接回答“你平时喜欢读什么？”，第一句话就提供与自己有关的信息。",
+    "check": [
+      "开头已经在回答问题",
+      "表达与日常对话场景相符"
+    ],
+    "promptId": "s-reading"
+  },
+  {
+    "id": "specific-vocabulary",
+    "category": "自然表达",
+    "title": "不用生僻词，也能表达得准确",
+    "point": "词汇能力包括选词和搭配准确。先说清楚，再考虑用更精确的词。",
+    "before": "The journey was very good.",
+    "after": "The journey was surprisingly relaxing because the train was quiet and I did not have to change services.",
+    "explanation": "good 没有错，但 relaxing 更明确地描述体验，并有细节支持。并不是每个 good 都必须替换。",
+    "drill": "描述最近一次出行，选一个准确的感受词，再用细节解释。",
+    "check": [
+      "词语描述的是具体体验",
+      "你理解所用词，而不是机械替换"
+    ],
+    "promptId": "s-journey"
+  },
+  {
+    "id": "repair-clearly",
+    "category": "自然表达",
+    "title": "说错时，简短修正后继续",
+    "point": "口语中可以自我修正。目标是恢复清晰表达，而不是为每个小错误停下来道歉。",
+    "before": "I went there next week… sorry… sorry…",
+    "after": "I went there last week, I mean, last Saturday, with a friend.",
+    "explanation": "简短修正具体时间后继续表达。不要刻意加入 I mean；确实需要澄清时再用。",
+    "drill": "讲一次周末活动；若说错一个细节，简短修正并继续讲，不从头背一遍。",
+    "check": [
+      "修正后更清楚了",
+      "没有因一个小错误中断整段回答"
+    ],
+    "promptId": "s-routine"
+  },
+  {
+    "id": "qualified-claims",
+    "category": "自然表达",
+    "title": "Part 3 的概括，要留出适用范围",
+    "point": "many、some、often、can 等可以表达不同程度，但不能无意义堆叠；选择与你真正想说的范围一致的词。",
+    "before": "Technology always makes everyone learn better.",
+    "after": "Technology can make learning more convenient, particularly when people need access to materials outside the classroom.",
+    "explanation": "后者说明一种可能的作用与场景，避免没有依据的绝对判断。",
+    "drill": "科技一定会改善学习吗？给出你的看法，并说明一个适用条件。",
+    "check": [
+      "没有把部分情况说成所有情况",
+      "范围词与后面的解释一致"
+    ],
+    "promptId": "s-technology"
+  },
+  {
+    "id": "past-event-tense",
+    "category": "语法修正",
+    "title": "讲过去的经历，先稳住过去时",
+    "point": "描述过去发生的主要事件通常用过去时；描述现在仍然成立的情况时，可以切换，但要让时间关系清楚。",
+    "before": "Last year I go to Brisbane and meet a friend.",
+    "after": "Last year I went to Brisbane and met a friend.",
+    "explanation": "Last year 给出了过去时间，go 和 meet 的过去式分别是 went 和 met。语法是否复杂不是唯一目标，先保证关系准确。",
+    "drill": "用三个句子讲一次过去的旅程，检查每个主要动作的时间。",
+    "check": [
+      "过去动作的动词形式准确",
+      "若切换到现在时，原因清楚"
+    ],
+    "promptId": "s-journey"
+  },
+  {
+    "id": "spend-time",
+    "category": "语法修正",
+    "title": "spend time 后面常接 doing",
+    "point": "表达“花时间做某事”，常用 spend time doing something。",
+    "before": "I spend a lot of time to read.",
+    "after": "I spend a lot of time reading on the train.",
+    "explanation": "这里用 reading；若说 It takes me … to …，则是另一种结构，不要把两者拼在一起。",
+    "drill": "说说你平时在什么事情上花时间，再用过去时描述上个周末。",
+    "check": [
+      "spend time 后使用了合适结构",
+      "能换一个活动自己造句"
+    ],
+    "promptId": "s-routine"
+  },
+  {
+    "id": "agree-structure",
+    "category": "语法修正",
+    "title": "同意一个看法：I agree，不是 I am agree",
+    "point": "agree 本身就是动词。可以说 agree with someone，或 agree that …。",
+    "before": "I am agree that cities need more trees.",
+    "after": "I agree that cities need more trees, particularly in areas with very little shade.",
+    "explanation": "删去 am，并给观点补充适用场景。也可以用 I partly agree 表示部分同意。",
+    "drill": "城市是否应该增加公共空间？表达同意或部分同意，并说明理由。",
+    "check": [
+      "没有把 agree 当作形容词",
+      "同意之后有自己的理由"
+    ],
+    "promptId": "s-cities"
+  },
+  {
+    "id": "people-are",
+    "category": "语法修正",
+    "title": "people 通常按复数处理",
+    "point": "谈论“人们”时，people 通常接 are、have 或动词原形。person 则表示一个人。",
+    "before": "Many people is interested in learning online.",
+    "after": "Many people are interested in learning online because it gives them more flexibility.",
+    "explanation": "主语 many people 是复数，所以用 are。不要只记整句，换个主语检查动词能否相应改变。",
+    "drill": "分别用 many people 和 one person 描述学习习惯，检查主谓一致。",
+    "check": [
+      "主语单复数与动词一致",
+      "换了主语后仍能正确表达"
+    ],
+    "promptId": "s-learning"
+  },
+  {
+    "id": "used-to",
+    "category": "语法修正",
+    "title": "used to：过去有、现在发生了变化",
+    "point": "used to do 常描述过去的习惯或状态。be used to doing 表示“习惯于”，意思不同。",
+    "before": "I used to reading paper books when I was younger.",
+    "after": "I used to read paper books when I was younger, but now I mostly read on a screen.",
+    "explanation": "used to 后接动词原形 read；I am used to reading on a screen 则表示现在已经习惯屏幕阅读。",
+    "drill": "讲一个你过去的习惯，再说现在有什么不同。",
+    "check": [
+      "used to 后使用动词原形",
+      "没有混淆“过去常常”和“习惯于”"
+    ],
+    "promptId": "s-reading"
+  },
+  {
+    "id": "thought-groups",
+    "category": "发音意识",
+    "title": "按意思分组，不在每个单词后停顿",
+    "point": "回放时注意停顿是否落在意思完整的词组之间。自然表达并不要求完全没有停顿。",
+    "before": "I / usually / read / on / the / bus / because / it / helps / me / relax.",
+    "after": "I usually read on the bus / because it helps me relax.",
+    "explanation": "斜线只是练习停顿位置的标记，不是唯一读法。先让一个意群连贯，再提高速度。示范朗读仅供参考。",
+    "drill": "先给自己的一个句子标两个意群，再自然读出；随后换一句，不照搬停顿位置。",
+    "check": [
+      "主要停顿有助于理解意思",
+      "没有为了快而吞掉关键内容"
+    ],
+    "promptId": "s-place"
+  },
+  {
+    "id": "contrast-stress",
+    "category": "发音意识",
+    "title": "重读你真正要强调的信息",
+    "point": "对比时，重音可以帮助听者理解重点。先确定自己在对比什么，而不是每个词都用同样的力度。",
+    "before": "I prefer reading at home rather than in a busy café.",
+    "after": "I prefer reading at HOME rather than in a busy CAFÉ.",
+    "explanation": "大写标记想练习的对比重音，不代表单词通常要这样书写。读法会随语境变化，回放自己的录音更有帮助。",
+    "drill": "比较两个学习地点，在两个对比信息上突出重音，再听录音是否容易理解。",
+    "check": [
+      "重音与想表达的对比一致",
+      "其余部分仍然自然、清楚"
+    ],
+    "promptId": "s-place"
+  }
+]

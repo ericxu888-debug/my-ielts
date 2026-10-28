@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { api, attempts, checkConnection, connected, exportBackup, importBackup, sync, syncMessage } from '../training/storage'
+import { dailyLessonCalls, dailyLessonMessage, dailyLessonsEnabled, refreshLessons } from '../training/lessons'
 
 const password = ref('')
 const busy = ref(false)
@@ -38,6 +39,18 @@ async function logout() {
   catch (e) {
     error.value = (e as Error).message
   }
+}
+async function toggleDailyLessons() {
+  busy.value = true
+  error.value = ''
+  try {
+    const enabled = !dailyLessonsEnabled.value
+    await api('/lessons/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) })
+    await refreshLessons()
+    message.value = enabled ? '已开启每日新增口语微课，会使用 OpenAI API 额度。' : '已暂停每日自动新增，历史微课继续保留。'
+  }
+  catch (e) { error.value = (e as Error).message }
+  finally { busy.value = false }
 }
 async function restore(event: Event) {
   error.value = ''
@@ -95,12 +108,27 @@ async function restore(event: Event) {
         </p>
       </section>
       <section class="panel">
-        <span class="section-kicker">AI COACH</span><h2>{{ ai ? 'AI 已配置' : 'AI 尚未开通' }}</h2><p>AI 用于录音转写和基于原句的练习反馈。只有你点击“转写”或“分析”时才调用。</p><p class="muted">
+        <span class="section-kicker">AI COACH</span><h2>{{ !connected ? '登录后检查 AI 状态' : ai ? 'AI 已配置' : 'AI 尚未开通' }}</h2><p>转写和练习反馈由你点击后调用；每日新课开启后还会按计划自动调用。</p><p class="muted">
           启用后会将所选音频或作答文本发送到 AI 服务商，按实际调用计费。本网站不显示虚构分数，也不凭转写文本评价发音。
         </p><div class="studio-note">
           {{ ai ? '服务端已配置密钥；实际可用性取决于服务商额度和模型权限。' : '网站的练习、自主复盘和间隔复习无需 AI。开通 API 账户、配置额度及服务端密钥后，再启用自动反馈。' }}
         </div><p class="muted">
           AI 密钥由服务器保管，请勿填写到前端页面或聊天中。
+        </p>
+      </section>
+      <section class="panel">
+        <span class="section-kicker">DAILY SPEAKING LESSONS</span><h2>每天补充新内容，持续积累</h2><p>{{ dailyLessonMessage }}</p><p class="muted">
+          每日 08:00（布里斯班时间）开始准备 1 条新微课。服务器持续运行时无需打开网站；重启后只补当天，不批量补过去日期。
+        </p><p class="muted">
+          使用你的 OpenAI API 额度。每天最多成功新增 1 条；失败间隔至少 1 小时重试，每天合计最多 2 次请求、每次最多 1800 输出 token。实际费用取决于模型和输入输出，次数限制不是金额上限。
+        </p><p class="status-line">
+          今日已发起 {{ dailyLessonCalls }} / 2 次生成请求。刷新页面、查看历史和“换一条”只读取内容，不额外生成。
+        </p><button class="btn btn-secondary" :disabled="!connected || busy" @click="toggleDailyLessons">
+          {{ dailyLessonsEnabled ? '暂停每日自动新增' : '开启每日自动新增' }}
+        </button><p v-if="!connected" class="muted">
+          登录后可调整此设置。
+        </p><p class="muted">
+          新增内容为 AI 生成，经过格式和重复检查，未经人工逐条审校；如有疑问请核对可靠词典或教师意见。
         </p>
       </section>
       <section class="panel">

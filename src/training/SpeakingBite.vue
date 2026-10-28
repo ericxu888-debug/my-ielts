@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { dailyBiteIndex, speakingBites } from './speaking-bites'
+import { allSpeakingBites, dailyLessonMessage, generatedLessons } from './lessons'
 
-const index = ref(dailyBiteIndex())
-const bite = computed(() => speakingBites[index.value])
+const selectedId = ref('')
+const bite = computed(() => allSpeakingBites.value.find(b => b.id === selectedId.value) || generatedLessons.value[0] || speakingBites[dailyBiteIndex()])
+const index = computed(() => allSpeakingBites.value.findIndex(b => b.id === bite.value.id))
 const practising = ref(false)
 const reviewed = ref(false)
 const remaining = ref(30)
@@ -24,9 +26,10 @@ function next() {
   voiceError.value = ''
   reviewed.value = false
   remaining.value = 30
-  index.value = (index.value + 1) % speakingBites.length
+  selectedId.value = allSpeakingBites.value[(index.value + 1) % allSpeakingBites.value.length].id
 }
 function start() {
+  selectedId.value = bite.value.id
   if (supportsVoice)
     speechSynthesis.cancel()
   reviewed.value = false
@@ -66,8 +69,11 @@ onBeforeUnmount(() => {
 <template>
   <section class="bite-panel" aria-label="口语小课堂">
     <div class="between">
-      <span class="section-kicker">每天一点 · 口语小课堂</span><span class="muted">{{ index + 1 }} / {{ speakingBites.length }}</span>
+      <span class="section-kicker">持续新增 · 口语小课堂</span><span class="muted">{{ index + 1 }} / {{ allSpeakingBites.length }}</span>
     </div>
+    <p class="status-line">
+      {{ bite.source === 'ai' ? `${bite.day} 新增 · AI 生成，练习参考` : '预置基础课' }}<br>{{ dailyLessonMessage }}
+    </p>
     <span class="skill-badge speaking">{{ bite.category }}</span><h2>{{ bite.title }}</h2><p class="bite-point">
       {{ bite.point }}
     </p>

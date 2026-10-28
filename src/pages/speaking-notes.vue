@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { speakingBites } from '../training/speaking-bites'
+import { allSpeakingBites, dailyLessonMessage } from '../training/lessons'
 
 const category = ref('全部')
 const search = ref('')
 const categories = ['全部', '展开回答', '自然表达', '语法修正', '发音意识']
-const shown = computed(() => speakingBites.filter(b => (category.value === '全部' || b.category === category.value) && `${b.title} ${b.point} ${b.before} ${b.after}`.toLowerCase().includes(search.value.trim().toLowerCase())))
+const shown = computed(() => allSpeakingBites.value.filter(b => (category.value === '全部' || b.category === category.value) && `${b.title} ${b.point} ${b.before} ${b.after}`.toLowerCase().includes(search.value.trim().toLowerCase())))
 </script>
 
 <template>
@@ -21,11 +21,17 @@ const shown = computed(() => speakingBites.filter(b => (category.value === '全�
         {{ item }}
       </button>
     </div>
+    <p class="studio-note">
+      {{ dailyLessonMessage }} · 当前共 {{ allSpeakingBites.length }} 条。新增内容按日期归档，不替换历史内容。
+    </p>
     <p v-if="!shown.length" class="studio-note">
       暂时没有匹配的小知识，试试换个关键词。
     </p>
     <div class="knowledge-grid">
-      <article v-for="bite in shown" :key="bite.id" class="panel knowledge-card">
+      <article v-for="bite in shown" :key="bite.id" class="knowledge-card panel">
+        <p v-if="bite.source === 'ai'" class="status-line">
+          {{ bite.day }} 新增 · AI 生成，练习参考
+        </p>
         <span class="skill-badge speaking">{{ bite.category }}</span><h2>{{ bite.title }}</h2><p>{{ bite.point }}</p><details>
           <summary>看例句，试着说一次</summary><div class="bite-example">
             <span>先看这句</span><p lang="en">

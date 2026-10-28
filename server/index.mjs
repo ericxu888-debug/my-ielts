@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'no
 import { resolve, extname, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { answerSources, groundFeedback } from './feedback.mjs'
+import { createDailyLessons } from './daily-lessons.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)) }
@@ -40,11 +41,12 @@ function validAttempt(a) {
     && (!a.audioKey || /^[\w-]+\.[a-f0-9]{64}$/.test(a.audioKey))
 }
 
-export function createStudioServer({ password, dataDir, secureCookie = true, aiKey = '', aiModel = 'gpt-4.1-mini', transcriptionModel = 'gpt-4o-mini-transcribe', staticDir = resolve(root, 'dist') }) {
+export function createStudioServer({ password, dataDir, secureCookie = true, aiKey = '', aiModel = 'gpt-4.1-mini', transcriptionModel = 'gpt-4o-mini-transcribe', automaticLessons = false, lessonModel = aiModel, staticDir = resolve(root, 'dist') }) {
   if (!password || password.length < 12) throw new Error('IELTS_PASSWORD 必须至少 12 个字符；请在服务器环境变量中设置。')
   mkdirSync(resolve(dataDir, 'audio'), { recursive: true, mode: 0o700 })
   const db = new DatabaseSync(resolve(dataDir, 'studio.sqlite'))
   db.exec('PRAGMA journal_mode = WAL; CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, revision INTEGER NOT NULL, data TEXT NOT NULL)')
+  const daily = createDailyLessons({ db, aiKey, model: lessonModel, automatic: automaticLessons })
   const sessionKey = randomBytes(32)
   const attemptsByIP = new Map()
   const aiBusy = new Set()
@@ -70,6 +72,13 @@ export function createStudioServer({ password, dataDir, secureCookie = true, aiK
           if (req.headers.origin && new URL(req.headers.origin).host !== req.headers.host) return json(res, 403, { error: '不允许跨站请求' })
         }
         if (path === '/api/session' && req.method === 'GET') return json(res, 200, { authenticated: authenticated(req), ai: authenticated(req) && !!aiKey })
+        if (path === '/api/lessons' && req.method === 'GET') {
+          const snapshot = daily.snapshot()
+          const etag = `"${createHash('sha256').update(JSON.stringify(snapshot)).digest('hex')}"`
+          res.setHeader('ETag', etag)
+          if (req.headers['if-none-match'] === etag) { res.writeHead(304, { 'Cache-Control': 'private, no-cache' }); return res.end() }
+          return json(res, 200, snapshot)
+        }
         if (path === '/api/login' && req.method === 'POST') {
           const ip = req.socket.remoteAddress || 'unknown'
           const entry = attemptsByIP.get(ip)
@@ -86,6 +95,12 @@ export function createStudioServer({ password, dataDir, secureCookie = true, aiK
           return json(res, 200, { ok: true })
         }
         if (!authenticated(req)) return json(res, 401, { error: '请先连接私人同步服务' })
+        if (path === '/api/lessons/settings' && req.method === 'POST') {
+          const input = await data(req)
+          if (typeof input.enabled !== 'boolean') return json(res, 400, { error: '设置格式不正确' })
+          daily.setEnabled(input.enabled)
+          return json(res, 200, daily.snapshot())
+        }
         if (path === '/api/logout' && req.method === 'POST') { res.setHeader('Set-Cookie', `${cookie('')}; Max-Age=0`); return json(res, 200, { ok: true }) }
         if (path === '/api/attempts' && req.method === 'GET') return json(res, 200, db.prepare('SELECT data FROM attempts ORDER BY rowid DESC').all().map(r => JSON.parse(r.data)))
         const record = /^\/api\/attempts\/([\w-]{1,100})$/.exec(path)
@@ -167,11 +182,12 @@ export function createStudioServer({ password, dataDir, secureCookie = true, aiK
     }
     catch (e) { if (!res.headersSent) json(res, e.status || 500, { error: e.status ? e.message : '服务暂时不可用，练习保留在本机，请稍后重试。' }); else res.end() }
   })
-  server.on('close', () => db.close())
+  server.on('listening', () => daily.start())
+  server.on('close', () => { daily.stop(); db.close() })
   return server
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const server = createStudioServer({ password: process.env.IELTS_PASSWORD, dataDir: resolve(process.env.IELTS_DATA_DIR || resolve(root, '.studio-data')), secureCookie: process.env.IELTS_COOKIE_SECURE !== 'false', aiKey: process.env.IELTS_AI_KEY, aiModel: process.env.IELTS_AI_MODEL || 'gpt-4.1-mini', transcriptionModel: process.env.IELTS_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe' })
+  const server = createStudioServer({ password: process.env.IELTS_PASSWORD, dataDir: resolve(process.env.IELTS_DATA_DIR || resolve(root, '.studio-data')), secureCookie: process.env.IELTS_COOKIE_SECURE !== 'false', aiKey: process.env.IELTS_AI_KEY, aiModel: process.env.IELTS_AI_MODEL || 'gpt-4.1-mini', transcriptionModel: process.env.IELTS_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe', automaticLessons: process.env.IELTS_DAILY_LESSONS !== 'false', lessonModel: process.env.IELTS_LESSON_MODEL || process.env.IELTS_AI_MODEL || 'gpt-4.1-mini' })
   server.listen(Number(process.env.PORT || 8787), process.env.HOST || '127.0.0.1', () => console.log('IELTS Studio server listening'))
 }

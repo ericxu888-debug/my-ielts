@@ -11,6 +11,16 @@ const { chromium } = require('playwright')
 async function run() {
   const { createStudioServer } = await import('../server/index.mjs')
   const directory = mkdtempSync(join(tmpdir(), 'ielts-browser-'))
+  // Publish one simulated new daily lesson, then restart using the same disk.
+  // The browser must read the stored archive; it must not generate on visits.
+  const { DatabaseSync } = require('node:sqlite')
+  const { createDailyLessons } = await import('../server/daily-lessons.mjs')
+  const db = new DatabaseSync(join(directory, 'studio.sqlite'))
+  const newLesson = { category: '自然表达', topicKey: 'requesting-clarification-politely', title: '没听清楚时如何确认问题', point: '说明没听清楚的部分，并礼貌地请对方重复。', before: 'Please say it again.', after: 'Could you repeat the last part of the question, please?', explanation: '第一句没有语法错误，后者具体说明需要重复哪一部分。', drill: '用自己的话请对方重复一个问题，再换一种表达。', check: ['说明自己没听清楚的部分', '能够自然礼貌地表达请求'], promptId: 's-learning' }
+  const daily = createDailyLessons({ db, aiKey: 'mock-only', automatic: true, now: () => new Date('2026-10-28T01:00:00Z'), fetcher: async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(newLesson) } }] }), { status: 200 }) })
+  await daily.tick()
+  daily.stop()
+  db.close()
   const password = randomBytes(24).toString('hex')
   const server = createStudioServer({ password, dataDir: directory, secureCookie: false })
   server.listen(0, '127.0.0.1')
@@ -43,6 +53,7 @@ async function run() {
     }
     await go(a, '/')
     await a.getByRole('heading', { name: /练习有方向/ }).waitFor()
+    await a.locator('.bite-panel h2').filter({ hasText: '没听清楚时如何确认问题' }).waitFor()
     const lessonTitle = await a.locator('.bite-panel h2').textContent()
     await a.getByRole('button', { name: '换一条' }).click()
     assert.notEqual(await a.locator('.bite-panel h2').textContent(), lessonTitle)
@@ -62,6 +73,8 @@ async function run() {
     await a.locator('.knowledge-card summary').click()
     await a.getByText('I spend a lot of time reading on the train.', { exact: true }).waitFor()
     console.log('PASS: home-page speaking lesson, hidden-example retrieval, mobile first-screen visibility and searchable knowledge library')
+    assert.equal((await (await a.request.get(`${origin}/api/lessons`)).json()).lessons.length, 1)
+    console.log('PASS: newly generated lesson persists across server restart and is shared publicly without visitor-triggered AI calls')
     await login(a)
     await go(a, '/train?prompt=w-study')
     const first = 'Universities should prepare students for work, but they should also encourage research. For example, research into public health can benefit society even when it does not produce an immediate commercial return.'
@@ -185,6 +198,13 @@ async function run() {
     await a.getByRole('button', { name: '提交并进入复盘' }).click()
     await a.getByText('本次答对 6 / 6。先解释错误原因，再决定复习间隔。').waitFor()
     console.log('PASS: new Task 1 datasets and process diagram, targeted review guide and new reading exercise')
+    await go(a, '/settings')
+    await a.getByRole('button', { name: '开启每日自动新增' }).click()
+    await a.getByRole('button', { name: '暂停每日自动新增' }).waitFor()
+    await a.getByRole('button', { name: '暂停每日自动新增' }).click()
+    await a.getByRole('button', { name: '开启每日自动新增' }).waitFor()
+    assert.equal((await (await a.request.get(`${origin}/api/lessons`)).json()).enabled, false)
+    console.log('PASS: authenticated recurring-generation control can be enabled and paused from the settings screen')
     assert.deepEqual(errors, [])
     console.log('PASS: no JavaScript page errors; no paid APIs called')
   }
